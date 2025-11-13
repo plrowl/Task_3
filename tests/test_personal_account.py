@@ -1,19 +1,9 @@
 import allure
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-
 from config import TEST_USER
 from urls import PERSONAL_ACCOUNT_URL, BASE_URL
-from locators import MainPageLocators, LoginPageLocators, ProfilePageLocators
-
-
-import allure
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-
-from config import TEST_USER
-from urls import PERSONAL_ACCOUNT_URL, BASE_URL
-from locators import MainPageLocators, LoginPageLocators, ProfilePageLocators
+from pages.main_page import MainPage
+from pages.login_page import LoginPage
+from pages.profile_page import ProfilePage
 
 
 @allure.feature("Личный кабинет")
@@ -21,42 +11,60 @@ from locators import MainPageLocators, LoginPageLocators, ProfilePageLocators
 class TestPersonalAccount:
 
     @allure.title("Переход в личный кабинет по клику на кнопку «Личный кабинет»")
-    def test_personal_account_button(self, driver):
-        with allure.step("Открываем форму входа через «Личный кабинет»"):
-            driver.find_element(*MainPageLocators.PERSONAL_ACCOUNT_BUTTON).click()
-            driver.find_element(*LoginPageLocators.EMAIL_INPUT).send_keys(TEST_USER['email'])
-            driver.find_element(*LoginPageLocators.PASSWORD_INPUT).send_keys(TEST_USER['password'])
-            WebDriverWait(driver, 5).until(
-                EC.element_to_be_clickable(LoginPageLocators.LOGIN_BUTTON)
-            ).click()
-            WebDriverWait(driver, 5).until(
-                EC.element_to_be_clickable(MainPageLocators.PERSONAL_ACCOUNT_BUTTON)
-            ).click()
+    def test_open_personal_account(self, driver):
+        main_page = MainPage(driver)
+        login_page = LoginPage(driver)
+        profile_page = ProfilePage(driver)
 
-        with allure.step("Проверяем, что мы на странице личного кабинета"):
-            WebDriverWait(driver, 5).until(EC.url_contains("/account"))
-            assert driver.current_url.startswith(PERSONAL_ACCOUNT_URL.rstrip("/"))
-
-
-    @allure.title("Переход из личного кабинета в Конструктор через кнопку «Конструктор»")
-    def test_personal_account_constructor_button(self, driver):
         with allure.step("Открываем форму входа и логинимся"):
-            driver.find_element(*MainPageLocators.PERSONAL_ACCOUNT_BUTTON).click()
-            driver.find_element(*LoginPageLocators.EMAIL_INPUT).send_keys(TEST_USER['email'])
-            driver.find_element(*LoginPageLocators.PASSWORD_INPUT).send_keys(TEST_USER['password'])
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(LoginPageLocators.LOGIN_BUTTON)).click()
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(MainPageLocators.PERSONAL_ACCOUNT_BUTTON)).click()
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(ProfilePageLocators.CONSTRUCT_BUTTON)).click()
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(MainPageLocators.MAKE_ORDER_BUTTON))
-            assert driver.current_url == BASE_URL
+            main_page.go_to_personal_account()
+            login_page.login(TEST_USER["email"], TEST_USER["password"])
+            main_page.wait_loaded()
+
+        with allure.step("Переходим в личный кабинет"):
+            profile_page.open_profile()
+
+        with allure.step("Проверяем, что открылась страница профиля"):
+            assert profile_page.current_url.startswith(PERSONAL_ACCOUNT_URL)
+
+    @allure.title("Переход в Конструктор по кнопке в личном кабинете")
+    def test_personal_account_constructor_button(self, driver):
+        main_page = MainPage(driver)
+        login_page = LoginPage(driver)
+        profile_page = ProfilePage(driver)
+
+        with allure.step("Открываем форму входа и логинимся"):
+            main_page.go_to_personal_account()
+            login_page.login(TEST_USER["email"], TEST_USER["password"])
+            main_page.wait_loaded()
+
+        with allure.step("Переходим в личный кабинет"):
+            profile_page.open_profile()
+
+        with allure.step("Нажимаем кнопку 'Конструктор'"):
+            profile_page.go_to_constructor()
+
+        with allure.step("Проверяем, что открылась главная страница"):
+            main_page.wait_loaded()
+            assert main_page.current_url == BASE_URL
 
     @allure.title("Переход в Конструктор по клику на логотип Stellar Burgers")
     def test_personal_account_constructor_logo(self, driver):
+        main_page = MainPage(driver)
+        login_page = LoginPage(driver)
+        profile_page = ProfilePage(driver)
+
         with allure.step("Открываем форму входа и логинимся"):
-            driver.find_element(*MainPageLocators.PERSONAL_ACCOUNT_BUTTON).click()
-            driver.find_element(*LoginPageLocators.EMAIL_INPUT).send_keys(TEST_USER['email'])
-            driver.find_element(*LoginPageLocators.PASSWORD_INPUT).send_keys(TEST_USER['password'])
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(LoginPageLocators.LOGIN_BUTTON)).click()
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(MainPageLocators.PERSONAL_ACCOUNT_BUTTON)).click()
-            WebDriverWait(driver, 3).until(EC.element_to_be_clickable(ProfilePageLocators.LOGO_LINK)).click()
-            assert driver.current_url == BASE_URL
+            main_page.go_to_personal_account()
+            login_page.login(TEST_USER["email"], TEST_USER["password"])
+            main_page.wait_loaded()
+
+        with allure.step("Переходим в личный кабинет"):
+            profile_page.open_profile()
+
+        with allure.step("Кликаем по логотипу в личном кабинете"):
+            profile_page.click_logo()
+
+        with allure.step("Проверяем, что открылась главная страница"):
+            main_page.wait_loaded()
+            assert main_page.current_url == BASE_URL

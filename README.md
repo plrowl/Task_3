@@ -4,10 +4,8 @@ UI автотесты Stellar Burgers
 
 Установка и запуск
 pip install -r requirements.txt
-pytest
-Для запуска в Firefox:
-pytest --browser=firefox
 Для отчёта Allure:
+pytest --alluredir=allure_results
 allure serve allure_results
 
 ** Описание тестов**
